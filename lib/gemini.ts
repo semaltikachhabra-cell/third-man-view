@@ -1,4 +1,5 @@
-const MODEL = "gemini-3.8-flash";
+// Fallback chain: if one Flash model is overloaded (503/429) or retired (404), try the next.
+const MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest"];
 
 type Schema = Record<string, unknown>;
 
@@ -7,10 +8,12 @@ export async function geminiJSON<T>(prompt: string, schema: Schema, validate: (x
   if (!key) throw new Error("GEMINI_API_KEY is not set");
 
   let lastErr: unknown;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const model = MODELS[attempt % MODELS.length];
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 400 * attempt));
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": key },
@@ -23,7 +26,7 @@ export async function geminiJSON<T>(prompt: string, schema: Schema, validate: (x
               thinkingConfig: { thinkingBudget: 0 },
             },
           }),
-          signal: AbortSignal.timeout(40_000),
+          signal: AbortSignal.timeout(20_000),
         }
       );
       if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 200)}`);
@@ -35,5 +38,6 @@ export async function geminiJSON<T>(prompt: string, schema: Schema, validate: (x
       lastErr = e;
     }
   }
-  throw lastErr instanceof Error ? lastErr : new Error("Gemini call failed");
+  console.error("Gemini failed", lastErr);
+  throw new Error("The AI model is busy right now. Please try again in a moment.");
 }

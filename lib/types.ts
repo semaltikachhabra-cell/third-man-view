@@ -50,18 +50,23 @@ export interface PlayerForm {
 export interface FormAndVenue {
   playerForm: PlayerForm[];
   venueTrends: { title: string; detail: string }[];
+  takeaways: string[];
+  angles: string[];
 }
 
 export interface XI {
   team: string;
   xi: { name: string; role: string; reason: string }[];
   keyCall: string;
+  confidence: "High" | "Medium" | "Low";
 }
 
 export interface Brief {
   dossier: Dossier;
   playerForm: PlayerForm[];
   venueTrends: FormAndVenue["venueTrends"];
+  takeaways: string[];
+  angles: string[];
   predictedXI: XI;
   generatedAt: string;
 }

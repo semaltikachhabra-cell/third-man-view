@@ -1,7 +1,7 @@
 import { generateBrief } from "@/lib/brief";
 import type { BriefRequest, Format } from "@/lib/types";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const FORMATS: Format[] = ["T20I", "ODI", "Test"];
 
