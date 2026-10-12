@@ -23,7 +23,10 @@ const fmtOf = (t?: string): Format | undefined => {
 const hasTeam = (m: any, team: string) => (m.teams ?? []).some((t: string) => norm(t).includes(norm(team)) || norm(team).includes(norm(t)));
 
 async function allMatches(): Promise<any[]> {
-  const pages = await Promise.all([0, 25, 50].map((o) => api("matches", { offset: String(o) }).catch(() => [])));
+  // First call is not swallowed: a missing key, bad key or exhausted quota should surface as a clear reason.
+  const first = await api("matches", { offset: "0" });
+  const rest = await Promise.all([25, 50].map((o) => api("matches", { offset: String(o) }).catch(() => [])));
+  const pages = [first, ...rest];
   const cur = await api("currentMatches", { offset: "0" }).catch(() => []);
   const seen = new Map<string, any>();
   for (const m of [...cur, ...pages.flat()]) if (m?.id) seen.set(m.id, m);
