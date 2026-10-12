@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+    <style>
+      .box{fill:#eff6ff;stroke:#2563eb;stroke-width:2;rx:14}
+      .ai{fill:#fff7ed;stroke:#f97316;stroke-width:2;rx:14}
+      .ext{fill:#f1f5f9;stroke:#64748b;stroke-width:2;stroke-dasharray:6 4;rx:14}
+      .ok{fill:#f0fdf4;stroke:#16a34a;stroke-width:2;rx:14}
+      .t{font-size:17px;font-weight:700;fill:#0f172a}
+      .s{font-size:13px;fill:#334155}
+      .h{font-size:14px;font-weight:700;fill:#64748b;letter-spacing:2px}
+      .l{stroke:#475569;stroke-width:2;fill:none;marker-end:url(#a)}
+    </style>
+  </defs>
+  <rect width="1400" height="820" fill="#ffffff"/>
+  <text x="40" y="48" style="font-size:28px;font-weight:800;fill:#0f172a">Third Man View: Components Map</text>
+  <text x="40" y="74" class="s" style="font-size:15px">Pre-Match Cricket Intelligence Briefing agent for Arjun's newsletter (Next.js on Vercel, Gemini Flash for all AI tasks)</text>
+
+  <text x="40" y="118" class="h">1 · INPUT</text>
+  <rect class="box" x="40" y="130" width="250" height="110"/><text class="t" x="60" y="162">Input form (UI)</text>
+  <text class="s" x="60" y="186">Match ID  OR  Teams + Format</text><text class="s" x="60" y="206">(T20I / ODI / Test), recent-match chips</text>
+  <rect class="box" x="40" y="270" width="250" height="90"/><text class="t" x="60" y="302">POST /api/brief</text>
+  <text class="s" x="60" y="326">Validates input, returns brief JSON</text><text class="s" x="60" y="344">Clear errors (400 / 502)</text>
+  <path class="l" d="M165 240V270"/>
+
+  <text x="340" y="118" class="h">2 · DATA (LIVE)</text>
+  <rect class="box" x="340" y="130" width="260" height="90"/><text class="t" x="360" y="162">Match resolver</text>
+  <text class="s" x="360" y="186">ID lookup, or teams + format</text><text class="s" x="360" y="204">to upcoming / latest fixture</text>
+  <rect class="box" x="340" y="240" width="260" height="120"/><text class="t" x="360" y="272">Parallel data fetchers</text>
+  <text class="s" x="360" y="296">Squads · last 5 innings per player</text><text class="s" x="360" y="314">Venue history · Head-to-head</text><text class="s" x="360" y="332">(cached, retried, timeouts)</text>
+  <rect class="ext" x="340" y="390" width="260" height="80"/><text class="t" x="360" y="422">CricketData.org API</text>
+  <text class="s" x="360" y="446">External: matches, squads, scorecards</text>
+  <path class="l" d="M290 315H340"/><path class="l" d="M470 220V240"/><path class="l" d="M470 390V360"/>
+
+  <text x="650" y="118" class="h">3 · BUILD DOSSIER</text>
+  <rect class="box" x="650" y="130" width="260" height="130"/><text class="t" x="670" y="162">Dossier builder</text>
+  <text class="s" x="670" y="186">One normalised JSON: match, squads,</text><text class="s" x="670" y="204">per-player form, venue, H2H,</text><text class="s" x="670" y="222">data warnings</text>
+  <rect class="ok" x="650" y="290" width="260" height="100"/><text class="t" x="670" y="322">Reliability fallback</text>
+  <text class="s" x="670" y="346">Live data missing or too thin:</text><text class="s" x="670" y="364">built-in sample dossier + visible</text><text class="s" x="670" y="382">"Sample data" badge</text>
+  <path class="l" d="M600 190H650"/><path class="l" d="M780 260V290"/>
+
+  <text x="960" y="118" class="h">4 · AI (GEMINI FLASH)</text>
+  <rect class="ai" x="960" y="130" width="280" height="120"/><text class="t" x="980" y="162">Call A: form + venue + angles</text>
+  <text class="s" x="980" y="186">Player form summary and rating,</text><text class="s" x="980" y="204">top 3 venue trends, key takeaways,</text><text class="s" x="980" y="222">newsletter angles (JSON schema)</text>
+  <rect class="ai" x="960" y="280" width="280" height="120"/><text class="t" x="980" y="312">Call B: predicted XI</text>
+  <text class="s" x="980" y="336">11 players + one-line reason each,</text><text class="s" x="980" y="354">key call, confidence (JSON schema)</text><text class="s" x="980" y="372">Grounded only in the dossier</text>
+  <rect class="ext" x="960" y="430" width="280" height="70"/><text class="t" x="980" y="460">Gemini API (Google)</text><text class="s" x="980" y="482">External · model fallback chain + retries</text>
+  <path class="l" d="M910 195H960"/><path class="l" d="M910 340H960"/><path class="l" d="M1100 430V400"/>
+
+  <text x="40" y="540" class="h">5 · VALIDATE</text>
+  <rect class="ok" x="40" y="552" width="560" height="110"/><text class="t" x="60" y="584">Guardrails</text>
+  <text class="s" x="60" y="608">Exactly 11 unique players, each must exist in the real squad (no invented players)</text>
+  <text class="s" x="60" y="628">Schema-validated JSON · retry on bad output · "unknown" rating if data missing</text>
+  <text class="s" x="60" y="648">30-min result cache · edge cases: no fixture, no squad, new venue, API down</text>
+  <path class="l" d="M960 385H935V520H620V610H600"/>
+
+  <text x="700" y="540" class="h">6 · OUTPUT (UI)</text>
+  <rect class="box" x="700" y="552" width="540" height="190"/><text class="t" x="720" y="584">Briefing page</text>
+  <text class="s" x="720" y="610">Scorebug header · Predicted XI on a pitch (hover for reasons)</text>
+  <text class="s" x="720" y="630">Player form sparklines + badges · Venue Intel (top 3 trends + chart)</text>
+  <text class="s" x="720" y="650">Head-to-head ring · Key takeaways · Suggested angles</text>
+  <text class="s" x="720" y="670">Loading tracker · Copy for newsletter · Export Markdown</text>
+  <text class="s" x="720" y="700">Deployed on Vercel · public URL · GitHub repo</text>
+  <path class="l" d="M600 610H700"/>
+</svg>
