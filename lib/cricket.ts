@@ -16,9 +16,14 @@ async function api(path: string, params: Record<string, string> = {}): Promise<a
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
-const fmtOf = (t?: string): Format | undefined => {
+const fmtOf = (t?: string, name?: string): Format | undefined => {
   const x = (t ?? "").toLowerCase();
-  return x === "t20" || x === "t20i" ? "T20I" : x === "odi" ? "ODI" : x === "test" ? "Test" : undefined;
+  if (x === "t20" || x === "t20i") return "T20I";
+  if (x === "odi") return "ODI";
+  if (x === "test") return "Test";
+  // Some fixtures (e.g. unofficial/A-team matches) have no matchType; infer from the name.
+  const n = (name ?? "").toLowerCase();
+  return /\bt20/.test(n) ? "T20I" : /\bodi\b/.test(n) ? "ODI" : /\btest\b/.test(n) ? "Test" : undefined;
 };
 const hasTeam = (m: any, team: string) => (m.teams ?? []).some((t: string) => norm(t).includes(norm(team)) || norm(team).includes(norm(t)));
 
@@ -39,7 +44,7 @@ export async function resolveMatch(req: BriefRequest, matches: any[]): Promise<a
     return info;
   }
   const cands = matches
-    .filter((m) => hasTeam(m, req.teamA) && hasTeam(m, req.teamB) && fmtOf(m.matchType) === req.format)
+    .filter((m) => hasTeam(m, req.teamA) && hasTeam(m, req.teamB) && fmtOf(m.matchType, m.name) === req.format)
     .sort((a, b) => +new Date(a.dateTimeGMT ?? 0) - +new Date(b.dateTimeGMT ?? 0));
   const now = Date.now();
   const upcoming = cands.find((m) => !m.matchEnded && +new Date(m.dateTimeGMT ?? 0) >= now - 6 * 3600e3);
@@ -73,7 +78,7 @@ export async function buildLiveDossier(req: BriefRequest): Promise<Dossier> {
   const matches = await allMatches();
   const m = await resolveMatch(req, matches);
   const [teamA, teamB] = (m.teams as string[]) ?? (req.mode === "teams" ? [req.teamA, req.teamB] : ["", ""]);
-  const format = fmtOf(m.matchType) ?? (req.mode === "teams" ? req.format : "T20I");
+  const format = fmtOf(m.matchType, m.name) ?? (req.mode === "teams" ? req.format : "T20I");
 
   // Squads
   const squads: Record<string, Player[]> = {};
@@ -89,9 +94,10 @@ export async function buildLiveDossier(req: BriefRequest): Promise<Dossier> {
   }
 
   // Recent form: aggregate the last few completed scorecards per team (same format preferred)
-  const done = matches.filter((x) => x.matchEnded && x.id !== m.id);
+  const done = matches.filter((x) => x.matchEnded && (m.matchEnded || x.id !== m.id));
+  if (m.matchEnded && !done.some((x) => x.id === m.id)) done.push(m);
   const recentFor = (team: string) =>
-    done.filter((x) => hasTeam(x, team) && fmtOf(x.matchType) === format)
+    done.filter((x) => hasTeam(x, team) && fmtOf(x.matchType, x.name) === format)
       .sort((a, b) => +new Date(b.dateTimeGMT ?? 0) - +new Date(a.dateTimeGMT ?? 0)).slice(0, 4);
 
   for (const team of [teamA, teamB]) {
@@ -110,13 +116,13 @@ export async function buildLiveDossier(req: BriefRequest): Promise<Dossier> {
 
   // Venue history + head-to-head from the matches the provider exposes
   const venue = m.venue ?? "Unknown venue";
-  const venueHistory = done.filter((x) => x.venue && norm(x.venue) === norm(venue) && fmtOf(x.matchType) === format).slice(0, 6).map((x) => ({
+  const venueHistory = done.filter((x) => x.venue && norm(x.venue) === norm(venue) && fmtOf(x.matchType, x.name) === format).slice(0, 6).map((x) => ({
     date: x.date, teams: (x.teams ?? []).join(" v "), result: x.status,
     firstInningsScore: x.score?.[0] ? `${x.score[0].r}/${x.score[0].w} (${x.score[0].o} ov)` : undefined,
   }));
   if (venueHistory.length < 2) warnings.push("Limited venue history available from the provider.");
 
-  const h2hMatches = done.filter((x) => hasTeam(x, teamA) && hasTeam(x, teamB) && fmtOf(x.matchType) === format);
+  const h2hMatches = done.filter((x) => hasTeam(x, teamA) && hasTeam(x, teamB) && fmtOf(x.matchType, x.name) === format);
   const wins: Record<string, number> = { [teamA]: 0, [teamB]: 0 };
   let noResult = 0;
   for (const x of h2hMatches) {
